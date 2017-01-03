@@ -1,0 +1,64 @@
+
+vec4 overlay(vec4 up, vec4 down, float opacity)
+{
+   vec4 ret;
+   ret = down * (down + (2.0 * up) * (1.0 - down)); // overlay 
+   
+   up = ret;
+   ret = (1.0 - opacity) * down + opacity * up; // blend
+   return ret;
+}
+
+
+float decreaseBrightness(float pixvalue, float b) //defined [0,1] botn x amd y
+{
+    float darken =  0.75 * pixvalue*pixvalue*pixvalue*pixvalue;
+    float ret = (1.0 - b) * darken + b * pixvalue; // blend
+    return ret;
+}
+
+float increaseBrightness(float pixvalue, float b) // defined [-10,10] both in x and y
+{
+    float x = pixvalue * 10.0;
+    float brigten = -10.0/(x+3.0/2.0)+10.0+x/10.0;
+    brigten/=10.0;
+    
+    float ret = (1.0 - b) * pixvalue + b * brigten; // blend
+    return ret;
+}
+
+
+float applyBrightness(float pixValue, float b)
+{
+    float val = (b > 0.0) ? increaseBrightness(pixValue, b) : (b < 0.0) ? decreaseBrightness(pixValue, 1.0 + b) : pixValue;
+    return val;
+}
+
+kernel vec4 blackAndWhiteFilter2(sampler src,  __table sampler contrastLUT, float brightness)
+{
+    
+    vec4 pixValue = sample(src, samplerCoord(src));
+    unpremultiply(pixValue);
+    
+    float srcAlpha = pixValue.a;
+    //convert to gray
+    float grayValue  = pixValue.r; // input image is grayscale!
+    
+    //adjust brightness
+    float adjustedBrightness = applyBrightness(grayValue, brightness);
+    //adjust contrast
+    vec4 LUTPixel = sample( contrastLUT, vec2(adjustedBrightness * 255.0, 1.0));
+    unpremultiply(LUTPixel);
+    float adjusted = LUTPixel.r;
+    
+    pixValue.r = clamp( adjusted, 0.0, 1.0);
+    pixValue.g = pixValue.r; 
+    pixValue.b = pixValue.r; 
+    
+    pixValue.a = srcAlpha;
+    return premultiply(pixValue); 
+}
+
+
+
+

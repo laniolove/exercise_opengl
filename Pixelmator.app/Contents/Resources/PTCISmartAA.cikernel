@@ -1,0 +1,207 @@
+kernel vec4 aa (
+    sampler image,
+    sampler mask,
+    sampler blurred_mask,
+    vec4  color,
+    float edge_threshold,
+    float contrast_midpoint,
+    float contrast_smooth,
+    float contrast_edge
+) {
+    vec2
+        pos = destCoord();
+
+    float
+        mM = sample( blurred_mask, samplerTransform(blurred_mask, pos) ).a;
+
+    //return color * mM;
+
+    {
+        /*float s = (
+            sample(mask, samplerTransform(mask, pos + vec2(-0.5f, -0.5f))).a +
+            sample(mask, samplerTransform(mask, pos + vec2( 0.5f, -0.5f))).a +
+            sample(mask, samplerTransform(mask, pos + vec2(-0.5f,  0.5f))).a +
+            sample(mask, samplerTransform(mask, pos + vec2( 0.5f,  0.5f))).a
+        ) * 0.25f;*/
+
+        if(mM * (1.0f - mM) < 0.001f)
+            return color * mM;
+    }
+
+    const float
+        sum0 = 256.0f;
+
+    float
+        edge_threshold6 = edge_threshold * edge_threshold;
+    edge_threshold6 *= edge_threshold6 * edge_threshold6;
+
+    float
+        c11 = sample(image, samplerTransform(image, pos + vec2(-1.75f,-1.75f))).r,
+        c12 = sample(image, samplerTransform(image, pos + vec2(-1.25f,-2.25f))).r,
+        c13 = sample(image, samplerTransform(image, pos + vec2( 0.0f ,-2.25f))).r,
+        c14 = sample(image, samplerTransform(image, pos + vec2(+1.25f,-2.25f))).r,
+        c15 = sample(image, samplerTransform(image, pos + vec2(+1.75f,-1.75f))).r,
+        c21 = sample(image, samplerTransform(image, pos + vec2(-2.25f,-1.25f))).r,
+        c22 = sample(image, samplerTransform(image, pos + vec2(-0.75f,-0.75f))).r,
+        c23 = sample(image, samplerTransform(image, pos + vec2( 0.0f ,-1.25f))).r,
+        c24 = sample(image, samplerTransform(image, pos + vec2(+0.75f,-0.75f))).r,
+        c25 = sample(image, samplerTransform(image, pos + vec2(+2.25f,-1.25f))).r,
+        c31 = sample(image, samplerTransform(image, pos + vec2(-2.25f, 0.0f ))).r,
+        c32 = sample(image, samplerTransform(image, pos + vec2(-1.25f, 0.0f ))).r,
+        c33 = sample(image, samplerTransform(image, pos + vec2( 0.0f , 0.0f ))).r,
+        c34 = sample(image, samplerTransform(image, pos + vec2(+1.25f, 0.0f ))).r,
+        c35 = sample(image, samplerTransform(image, pos + vec2(+2.25f, 0.0f ))).r,
+        c41 = sample(image, samplerTransform(image, pos + vec2(-2.25f,+1.25f))).r,
+        c42 = sample(image, samplerTransform(image, pos + vec2(-0.75f,+0.75f))).r,
+        c43 = sample(image, samplerTransform(image, pos + vec2( 0.0f ,+1.25f))).r,
+        c44 = sample(image, samplerTransform(image, pos + vec2(+0.75f,+0.75f))).r,
+        c45 = sample(image, samplerTransform(image, pos + vec2(+2.25f,+1.25f))).r,
+        c51 = sample(image, samplerTransform(image, pos + vec2(-1.75f,+1.75f))).r,
+        c52 = sample(image, samplerTransform(image, pos + vec2(-1.25f,+2.25f))).r,
+        c53 = sample(image, samplerTransform(image, pos + vec2( 0.0f ,+2.25f))).r,
+        c54 = sample(image, samplerTransform(image, pos + vec2(+1.25f,+2.25f))).r,
+        c55 = sample(image, samplerTransform(image, pos + vec2(+1.75f,+1.75f))).r;
+
+    float cM = (
+        ( (c11 + c55) + (c15 + c51) ) +
+        ( (c13 + c53) + (c31 + c35) ) * 6.0f +
+        ( (c12 + c54) + (c25 + c41) + (c14 + c52) + (c21 + c45) ) * 4.0f +
+           c33 * 36.0f +
+        ( (c22 + c44) + (c24 + c42) ) * 16.0f +
+        ( (c23 + c43) + (c32 + c34) ) * 24.0f
+    ) / sum0;
+
+    c11 -= cM; c12 -= cM; c13 -= cM; c14 -= cM; c15 -= cM;
+    c21 -= cM; c22 -= cM; c23 -= cM; c24 -= cM; c25 -= cM;
+    c31 -= cM; c32 -= cM; c33 -= cM; c34 -= cM; c35 -= cM;
+    c41 -= cM; c42 -= cM; c43 -= cM; c44 -= cM; c45 -= cM;
+    c51 -= cM; c52 -= cM; c53 -= cM; c54 -= cM; c55 -= cM;
+
+    float
+        s11 = c11*c11, s12 = c12*c12, s13 = c13*c13, s14 = c14*c14, s15 = c15*c15,
+        s21 = c21*c21, s22 = c22*c22, s23 = c23*c23, s24 = c24*c24, s25 = c25*c25,
+        s31 = c31*c31, s32 = c32*c32, s33 = c33*c33, s34 = c34*c34, s35 = c35*c35,
+        s41 = c41*c41, s42 = c42*c42, s43 = c43*c43, s44 = c44*c44, s45 = c45*c45,
+        s51 = c51*c51, s52 = c52*c52, s53 = c53*c53, s54 = c54*c54, s55 = c55*c55;
+
+    float sum2 =
+        ( (s11 + s55) + (s15 + s51) ) +
+        ( (s13 + s53) + (s31 + s35) ) * 6.0f +
+        ( (s12 + s54) + (s25 + s41) + (s14 + s52) + (s21 + s45) ) * 4.0f +
+           s33 * 36.0f +
+        ( (s22 + s44) + (s24 + s42) ) * 16.0f +
+        ( (s23 + s43) + (s32 + s34) ) * 24.0f ;
+
+    float sum3 =
+        ( (s11*c11 + s55*c55) + (s15*c15 + s51*c51) ) +
+        ( (s13*c13 + s53*c53) + (s31*c31 + s35*c35) ) * 6.0f +
+        ( (s12*c12 + s54*c54) + (s25*c25 + s41*c41) + (s14*c14 + s52*c52) + (s21*c21 + s45*c45) ) * 4.0f +
+           s33*c33 * 36.0f +
+        ( (s22*c22 + s44*c44) + (s24*c24 + s42*c42) ) * 16.0f +
+        ( (s23*c23 + s43*c43) + (s32*c32 + s34*c34) ) * 24.0f ;
+
+    float sum4 =
+        ( (s11*s11 + s55*s55) + (s15*s15 + s51*s51) ) +
+        ( (s13*s13 + s53*s53) + (s31*s31 + s35*s35) ) * 6.0f +
+        ( (s12*s12 + s54*s54) + (s25*s25 + s41*s41) + (s14*s14 + s52*s52) + (s21*s21 + s45*s45) ) * 4.0f +
+           s33*s33 * 36.0f +
+        ( (s22*s22 + s44*s44) + (s24*s24 + s42*s42) ) * 16.0f +
+        ( (s23*s23 + s43*s43) + (s32*s32 + s34*s34) ) * 24.0f ;
+
+    float
+        m11 = sample(mask, samplerTransform(mask, pos + vec2(-1.75f,-1.75f))).a,
+        m12 = sample(mask, samplerTransform(mask, pos + vec2(-1.25f,-2.25f))).a,
+        m13 = sample(mask, samplerTransform(mask, pos + vec2( 0.0f ,-2.25f))).a,
+        m14 = sample(mask, samplerTransform(mask, pos + vec2(+1.25f,-2.25f))).a,
+        m15 = sample(mask, samplerTransform(mask, pos + vec2(+1.75f,-1.75f))).a,
+        m21 = sample(mask, samplerTransform(mask, pos + vec2(-2.25f,-1.25f))).a,
+        m22 = sample(mask, samplerTransform(mask, pos + vec2(-0.75f,-0.75f))).a,
+        m23 = sample(mask, samplerTransform(mask, pos + vec2( 0.0f ,-1.25f))).a,
+        m24 = sample(mask, samplerTransform(mask, pos + vec2(+0.75f,-0.75f))).a,
+        m25 = sample(mask, samplerTransform(mask, pos + vec2(+2.25f,-1.25f))).a,
+        m31 = sample(mask, samplerTransform(mask, pos + vec2(-2.25f, 0.0f ))).a,
+        m32 = sample(mask, samplerTransform(mask, pos + vec2(-1.25f, 0.0f ))).a,
+        m33 = sample(mask, samplerTransform(mask, pos + vec2( 0.0f , 0.0f ))).a,
+        m34 = sample(mask, samplerTransform(mask, pos + vec2(+1.25f, 0.0f ))).a,
+        m35 = sample(mask, samplerTransform(mask, pos + vec2(+2.25f, 0.0f ))).a,
+        m41 = sample(mask, samplerTransform(mask, pos + vec2(-2.25f,+1.25f))).a,
+        m42 = sample(mask, samplerTransform(mask, pos + vec2(-0.75f,+0.75f))).a,
+        m43 = sample(mask, samplerTransform(mask, pos + vec2( 0.0f ,+1.25f))).a,
+        m44 = sample(mask, samplerTransform(mask, pos + vec2(+0.75f,+0.75f))).a,
+        m45 = sample(mask, samplerTransform(mask, pos + vec2(+2.25f,+1.25f))).a,
+        m51 = sample(mask, samplerTransform(mask, pos + vec2(-1.75f,+1.75f))).a,
+        m52 = sample(mask, samplerTransform(mask, pos + vec2(-1.25f,+2.25f))).a,
+        m53 = sample(mask, samplerTransform(mask, pos + vec2( 0.0f ,+2.25f))).a,
+        m54 = sample(mask, samplerTransform(mask, pos + vec2(+1.25f,+2.25f))).a,
+        m55 = sample(mask, samplerTransform(mask, pos + vec2(+1.75f,+1.75f))).a;
+
+    /*float mM = (
+        ( (m11 + m55) + (m15 + m51) ) +
+        ( (m13 + m53) + (m31 + m35) ) * 6.0f +
+        ( (m12 + m54) + (m25 + m41) + (m14 + m52) + (m21 + m45) ) * 4.0f +
+           m33 * 36.0f +
+        ( (m22 + m44) + (m24 + m42) ) * 16.0f +
+        ( (m23 + m43) + (m32 + m34) ) * 24.0f
+    ) / sum0;*/
+
+    mM = clamp(contrast_midpoint + (mM - contrast_midpoint) * (contrast_smooth / contrast_edge), 0.0f, 1.0f);
+
+    m11 -= mM; m12 -= mM; m13 -= mM; m14 -= mM; m15 -= mM;
+    m21 -= mM; m22 -= mM; m23 -= mM; m24 -= mM; m25 -= mM;
+    m31 -= mM; m32 -= mM; m33 -= mM; m34 -= mM; m35 -= mM;
+    m41 -= mM; m42 -= mM; m43 -= mM; m44 -= mM; m45 -= mM;
+    m51 -= mM; m52 -= mM; m53 -= mM; m54 -= mM; m55 -= mM;
+
+    float sum0m =
+        ( (m11 + m55) + (m15 + m51) ) +
+        ( (m13 + m53) + (m31 + m35) ) * 6.0f +
+        ( (m12 + m54) + (m25 + m41) + (m14 + m52) + (m21 + m45) ) * 4.0f +
+           m33 * 36.0f +
+        ( (m22 + m44) + (m24 + m42) ) * 16.0f +
+        ( (m23 + m43) + (m32 + m34) ) * 24.0f ;
+
+    float sum1m =
+        ( (c11*m11 + c55*m55) + (c15*m15 + c51*m51) ) +
+        ( (c13*m13 + c53*m53) + (c31*m31 + c35*m35) ) * 6.0f +
+        ( (c12*m12 + c54*m54) + (c25*m25 + c41*m41) + (c14*m14 + c52*m52) + (c21*m21 + c45*m45) ) * 4.0f +
+           c33*m33 * 36.0f +
+        ( (c22*m22 + c44*m44) + (c24*m24 + c42*m42) ) * 16.0f +
+        ( (c23*m23 + c43*m43) + (c32*m32 + c34*m34) ) * 24.0f ;
+
+    float sum2m =
+        ( (s11*m11 + s55*m55) + (s15*m15 + s51*m51) ) +
+        ( (s13*m13 + s53*m53) + (s31*m31 + s35*m35) ) * 6.0f +
+        ( (s12*m12 + s54*m54) + (s25*m25 + s41*m41) + (s14*m14 + s52*m52) + (s21*m21 + s45*m45) ) * 4.0f +
+           s33*m33 * 36.0f +
+        ( (s22*m22 + s44*m44) + (s24*m24 + s42*m42) ) * 16.0f +
+        ( (s23*m23 + s43*m43) + (s32*m32 + s34*m34) ) * 24.0f ;
+
+    float
+        inv1 =             - sum0 * sum2,
+        inv2 = sum0 * sum3              ,
+        inv3 = sum2 * sum2              ,
+        inv4 = sum2 * sum2 - sum0 * sum4,
+        inv5 =             - sum2 * sum3,
+        inv6 = sum3 * sum3 - sum2 * sum4;
+
+    float
+        k2 = inv1 * sum2m + inv2 * sum1m + inv3 * sum0m,
+        k1 = inv2 * sum2m + inv4 * sum1m + inv5 * sum0m,
+        k0 = inv3 * sum2m + inv5 * sum1m + inv6 * sum0m;
+
+    float
+        det = sum0*sum3*sum3 + sum2 * (sum2*sum2 - sum0*sum4);
+
+    float
+        det_sign = sign(det);
+
+    float
+        det_abs = abs(det);
+
+    float
+        m = mM + (k0 + c33 * k1 + s33 * k2) * det_sign / (det_abs + edge_threshold6);
+
+    m = clamp(contrast_midpoint + (m - contrast_midpoint) * contrast_edge, 0.0f, 1.0f);
+
+    return color * m;
+}

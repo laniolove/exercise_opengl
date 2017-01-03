@@ -1,0 +1,55 @@
+/*
+getHue:
+	get Hue of a color
+in:
+	Color - vec4 RGBA color
+out:
+	Hue - float [0.0; 360.0) color Hue, -1.0 in case of neutral color
+*/
+float getHue(vec4 Color) 
+{
+    float colorMax, colorMin, colorHue, colorDelta;
+     
+    colorMax = max(max(Color.r, Color.g), Color.b);
+    colorMin = min(min(Color.r, Color.g), Color.b);
+    colorMax = max(colorMin + 1e-6, colorMax);
+    
+    colorDelta = ( colorMax - colorMin ); 
+     
+    colorHue = (colorMax == Color.r) ? ( (Color.g - Color.b) / colorDelta ) : (colorMax == Color.g) ? ( 2.0 + (Color.b - Color.r) / colorDelta ) : ( 4.0 + (Color.r - Color.g) / colorDelta );
+    colorHue *= 60.0;
+    colorHue = ( colorHue < 0.0 ) ? 360.0 + colorHue : colorHue;
+    colorHue = ( colorDelta < 0.0016 ) ? -1.0 : colorHue;
+    
+    return colorHue; 
+}
+
+kernel vec4 SixChannelMonochrome(sampler image, float redInc, float yellowInc, float greenInc, float cyanInc, float blueInc, float magentaInc)
+{
+    vec4 pix;
+    float gray, colorHue;
+    pix = unpremultiply(sample(image, samplerCoord(image)));
+  
+    colorHue = getHue(pix);
+
+    gray = 0.0;
+     
+    gray += ( 1.0 - clamp(abs(colorHue - 360.0), 0.0, 60.0) / 60.0 ) * redInc;
+    gray += ( 1.0 - clamp(abs(colorHue - 0.0), 0.0, 60.0) / 60.0 ) * redInc;
+
+    gray += ( 1.0 - clamp(abs(colorHue - 60.0), 0.0, 60.0) / 60.0 ) * yellowInc;
+    
+    gray += ( 1.0 - clamp(abs(colorHue - 120.0), 0.0, 60.0) / 60.0 ) * greenInc;
+    
+    gray += ( 1.0 - clamp(abs(colorHue - 180.0), 0.0, 60.0) / 60.0 ) * cyanInc;
+    
+    gray += ( 1.0 - clamp(abs(colorHue - 240.0), 0.0, 60.0) / 60.0 ) * blueInc;   
+    
+    gray += ( 1.0 - clamp(abs(colorHue - 300.0), 0.0, 60.0) / 60.0 ) * magentaInc;
+
+    gray = min(min(pix.r, pix.g), pix.b) + (max(max(pix.r, pix.g), pix.b) - min(min(pix.r, pix.g), pix.b)) * gray;     
+    gray = clamp(gray, 0.0, 1.0); 
+    
+    pix.r = pix.g = pix.b = gray;
+    return premultiply(pix); 
+}

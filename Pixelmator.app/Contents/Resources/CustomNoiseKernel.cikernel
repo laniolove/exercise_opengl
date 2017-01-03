@@ -1,0 +1,32 @@
+
+kernel vec4 CustomNoiseKernel(sampler image, sampler noise1, sampler noise2, sampler noise3, float level)
+{
+    vec4 pix = unpremultiply(sample(image, samplerCoord(image)));
+    
+    // Precalculated parameters.
+    const float t12 = 0.4;        // threshold between noise 1 and 2
+    const float t23 = t12 * 2.0;   // threshold between noise 2 and 3
+
+    // Amounts of noise additions.
+    const float l1 = level * 2.0;
+    const float l2 = max((level - t12) * 2.5, 0.0);
+    const float l3 = max((level - t23) * 3.5, 0.0);
+    
+    // Get pixels of noises.
+    const vec4 s1 = sample(noise1, samplerCoord(noise1));
+    const vec4 s2 = sample(noise2, samplerCoord(noise2));
+    const vec4 s3 = sample(noise3, samplerCoord(noise3));
+    
+    // Uniform random noise.
+    const float n1 = s1.r - 0.5;
+    const float n2 = s2.g - 0.5;
+    const float n3 = s3.b - 0.5;
+
+    const float c = 1.0 - 3.95 * (pix.r - 0.5) * (pix.r - 0.5);
+    
+    // Add noise and clamp.
+    pix.r = clamp(pix.r + c * (l1 * n1 + l2 * n2 + l3 * n3), 0.0, 1.0);
+    pix.b = pix.g = pix.r;
+
+    return premultiply(pix); 
+}

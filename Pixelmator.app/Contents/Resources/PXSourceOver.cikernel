@@ -1,0 +1,6 @@
+kernel vec4 pxSourceOverNoIntersection(sampler image, sampler backgroundImage)
+{
+	vec4 topColor=sample(image,samplerCoord(image));
+	vec4 bottomColor=sample(backgroundImage,samplerCoord(backgroundImage));
+	return (topColor.a<bottomColor.a ? bottomColor : topColor);
+}

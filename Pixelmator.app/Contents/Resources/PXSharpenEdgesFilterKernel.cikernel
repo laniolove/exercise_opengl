@@ -1,0 +1,47 @@
+
+float distadjust(float x)
+{
+   float y =  x * x * x * x * x + ( 500.0 * x * x * x);
+   float ymin = ( y < x) ? y : x ;
+   float ymax = ( y > x) ? y : x ;
+   return (x > 0.0) ? ymin : ymax;
+}
+
+
+kernel vec4 sharpenEdges(sampler src, float power)
+{
+    vec2 t1 = destCoord();
+    vec4 pixel = unpremultiply(sample(src, samplerTransform(src, t1)));
+    float srcAlpha = pixel.a;
+   
+    vec4 pixelN = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(0.0, -1.0) )));
+    vec4 pixelS = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(0.0,  1.0) )));
+    vec4 pixelE = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(1.0,  0.0) )));
+    vec4 pixelW = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(-1.0, 0.0) )));
+    
+    vec4 pixelNE = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(1.0, -1.0) )));
+    vec4 pixelNW = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(-1.0, -1.0) )));
+    vec4 pixelSE = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(1.0,  1.0) )));
+    vec4 pixelSW = unpremultiply(sample(src, samplerTransform(src, t1 + vec2(-1.0, 1.0) )));
+    
+    vec4 diff =  pixel -
+                 (
+                   0.25 * pixelNW  + 1.0 * pixelN    + 0.25 * pixelNE + 
+                   1.0 * pixelW    + 4.0 * pixel     + 1.0 * pixelE +
+                   0.25 * pixelSW  + 1.0 * pixelS    + 0.25 * pixelSE
+                 ) / 9.0;
+  
+    diff.r = distadjust(diff.r);
+    diff.g = distadjust(diff.g);
+    diff.b = distadjust(diff.b);
+    
+    vec4 color;
+    
+    color.r = clamp(pixel.r +  diff.r * power, 0.0, 1.0);
+    color.g = clamp(pixel.g +  diff.g * power, 0.0, 1.0);
+    color.b = clamp(pixel.b +  diff.b * power, 0.0, 1.0);
+    
+    color.a = srcAlpha;
+
+    return premultiply(color); 
+}
