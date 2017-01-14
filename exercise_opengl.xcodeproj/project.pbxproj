@@ -333,6 +333,7 @@
 				B8DAA21E1E1B8B6A004B1D36 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
