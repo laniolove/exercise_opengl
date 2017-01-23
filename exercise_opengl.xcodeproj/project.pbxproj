@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B84D0E401E349000001F4A1A /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B84D0E3F1E349000001F4A1A /* Carbon.framework */; };
+		B84D0E421E349020001F4A1A /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B84D0E411E349020001F4A1A /* CoreVideo.framework */; };
+		B84D0E441E349026001F4A1A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B84D0E431E349026001F4A1A /* IOKit.framework */; };
+		B84D0E461E349030001F4A1A /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B84D0E451E349030001F4A1A /* Cocoa.framework */; };
 		B8DAA2191E1B8B6A004B1D36 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B8DAA2181E1B8B6A004B1D36 /* main.cpp */; };
 		B8DAA22C1E1BA544004B1D36 /* libGLEW.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B8DAA2261E1BA544004B1D36 /* libGLEW.a */; };
 		B8DAA22D1E1BA544004B1D36 /* libglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B8DAA22B1E1BA544004B1D36 /* libglfw3.a */; };
@@ -26,6 +30,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B80E901C1E350BC80025CF13 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
+		B84D0E3E1E348C43001F4A1A /* info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = info.plist; path = ../info.plist; sourceTree = "<group>"; };
+		B84D0E3F1E349000001F4A1A /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		B84D0E411E349020001F4A1A /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		B84D0E431E349026001F4A1A /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		B84D0E451E349030001F4A1A /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		B8DAA2151E1B8B6A004B1D36 /* exercise_opengl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = exercise_opengl; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8DAA2181E1B8B6A004B1D36 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B8DAA2221E1BA544004B1D36 /* eglew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = eglew.h; sourceTree = "<group>"; };
@@ -44,6 +54,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B84D0E461E349030001F4A1A /* Cocoa.framework in Frameworks */,
+				B84D0E441E349026001F4A1A /* IOKit.framework in Frameworks */,
+				B84D0E421E349020001F4A1A /* CoreVideo.framework in Frameworks */,
+				B84D0E401E349000001F4A1A /* Carbon.framework in Frameworks */,
 				B8DAA2301E1BA559004B1D36 /* OpenGL.framework in Frameworks */,
 				B8DAA22C1E1BA544004B1D36 /* libGLEW.a in Frameworks */,
 				B8DAA22D1E1BA544004B1D36 /* libglfw3.a in Frameworks */,
@@ -74,7 +88,9 @@
 		B8DAA2171E1B8B6A004B1D36 /* exercise_opengl */ = {
 			isa = PBXGroup;
 			children = (
+				B84D0E3E1E348C43001F4A1A /* info.plist */,
 				B8DAA2181E1B8B6A004B1D36 /* main.cpp */,
+				B80E901C1E350BC80025CF13 /* main.h */,
 			);
 			path = exercise_opengl;
 			sourceTree = "<group>";
@@ -129,6 +145,10 @@
 		B8DAA22E1E1BA559004B1D36 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B84D0E451E349030001F4A1A /* Cocoa.framework */,
+				B84D0E431E349026001F4A1A /* IOKit.framework */,
+				B84D0E411E349020001F4A1A /* CoreVideo.framework */,
+				B84D0E3F1E349000001F4A1A /* Carbon.framework */,
 				B8DAA22F1E1BA559004B1D36 /* OpenGL.framework */,
 			);
 			name = Frameworks;
@@ -291,11 +311,13 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				DEVELOPMENT_TEAM = 82P94YX72W;
+				INFOPLIST_FILE = "$(SRCROOT)/info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/third_libraries/lib_glew",
 					"$(PROJECT_DIR)/third_libraries/lib_glfw",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.freedragon.exerciseopengl;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -305,11 +327,13 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				DEVELOPMENT_TEAM = 82P94YX72W;
+				INFOPLIST_FILE = "$(SRCROOT)/info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/third_libraries/lib_glew",
 					"$(PROJECT_DIR)/third_libraries/lib_glfw",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.freedragon.exerciseopengl;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
